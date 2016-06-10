@@ -39,8 +39,22 @@ class Usb(Escpos):
             raise NoDeviceError()
         try:
             if self.device.is_kernel_driver_active(self.interface):
-                self.device.detach_kernel_driver(self.interface) 
+                self.device.detach_kernel_driver(self.interface)
             self.device.set_configuration()
+            configuration = self.device.get_active_configuration()
+            interface = configuration[(self.interface,0)]
+            # Get IN endpoint
+            endpoint = usb.util.find_descriptor(
+                interface, custom_match=lambda e: \
+                    usb.util.endpoint_direction(e.bEndpointAddress) == \
+                    usb.util.ENDPOINT_IN)
+            self.in_ep = endpoint.bEndpointAddress
+            # Get OUT endpoint
+            endpoint = usb.util.find_descriptor(
+                interface, custom_match=lambda e: \
+                    usb.util.endpoint_direction(e.bEndpointAddress) == \
+                    usb.util.ENDPOINT_OUT)
+            self.out_ep = endpoint.bEndpointAddress
             usb.util.claim_interface(self.device, self.interface)
         except usb.core.USBError as e:
             raise HandleDeviceError(e)
