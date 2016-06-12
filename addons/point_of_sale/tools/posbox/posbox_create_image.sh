@@ -29,7 +29,7 @@ cp -a *raspbian*.img posbox.img
 
 CLONE_DIR="${OVERWRITE_FILES_BEFORE_INIT_DIR}/home/pi/odoo"
 mkdir "${CLONE_DIR}"
-git clone -b 8.0 --no-checkout --depth 1 https://github.com/odoo/odoo.git "${CLONE_DIR}"
+git clone -b 8.0 --no-checkout --depth 1 https://github.com/algiopensource/posbox.git "${CLONE_DIR}"
 cd "${CLONE_DIR}"
 git config core.sparsecheckout true
 echo "addons/web
@@ -70,6 +70,7 @@ LOOP_MAPPER_PATH=$(kpartx -av posbox.img | tail -n 1 | cut -d ' ' -f 3)
 LOOP_MAPPER_PATH="/dev/mapper/${LOOP_MAPPER_PATH}"
 
 # resize filesystem
+sleep 2
 e2fsck -f "${LOOP_MAPPER_PATH}" # resize2fs requires clean fs
 resize2fs "${LOOP_MAPPER_PATH}"
 
@@ -91,7 +92,7 @@ umount "${MOUNT_POINT}"
 
 # from http://paulscott.co.za/blog/full-raspberry-pi-raspbian-emulation-with-qemu/
 # ssh pi@localhost -p10022
-QEMU_OPTS=(-kernel kernel-qemu -cpu arm1176 -m 256 -M versatilepb -no-reboot -serial stdio -append 'root=/dev/sda2 rootfstype=ext4 rw' -hda posbox.img -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::18069-:8069 -net nic)
+QEMU_OPTS=(-kernel kernel-qemu -cpu arm1176 -m 256 -M versatilepb -no-reboot -serial stdio -append 'root=/dev/sda2 rootfstype=ext4 rw' -drive file=posbox.img,index=0,media=disk,format=raw -net user,hostfwd=tcp::10022-:22,hostfwd=tcp::18069-:8069 -net nic)
 if [ -z ${DISPLAY:-} ] ; then
     QEMU_OPTS+=(-nographic)
 fi
